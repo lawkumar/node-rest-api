@@ -22,6 +22,16 @@ todo.save().then((doc) => {
 }) ;
 });
 
+// GET /todos
+
+app.get('/todos', (req, res) => {
+  Todo.find().then((todo)=>{
+    res.send({todo});
+  }, (error) => {
+    res.status(400).send(error);
+  })
+});
+
 
 
 app.listen(3000, () => {
