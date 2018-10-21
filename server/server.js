@@ -1,5 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+const _ = require('lodash');
+
 var {ObjectID} = require('mongodb'); 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./models/todo');
@@ -54,9 +56,9 @@ app.get('/todos/:id', (req, res) => {
   })
 });
 
+// DELETE todos/id
 app.delete('/todos/:id', (req, res) => {
    var id = req.params.id;
-   console.log("inside delete"); 
    if (!ObjectID.isValid(id))
    {
      return res.status(404).send();
@@ -73,7 +75,40 @@ app.delete('/todos/:id', (req, res) => {
    })
 });
 
+// PATCH /todos/id
 
+app.patch('/todos/:id', (req, res)=> {
+var id = req.params.id;
+var body = _.pick(req.body, ['text', 'completed']);
+
+if (_.isBoolean(body.completed) && body.completed)
+{
+  body.completedAt = new Date().getTime();
+}
+else
+{
+  body.completedAt = null;
+  body.completed = false;
+}
+if (!ObjectID.isValid(id))
+{
+  return res.status(404).send();
+}
+
+Todo.findByIdAndUpdate(id, {$set : body}, {new : true}).then((todo)=> {
+if (!todo)
+{
+  return res.status(404).send();
+}
+res.send({todo});
+
+}).catch((e) => {
+  res.status(400).send();
+})
+
+}, (err) => {
+   return res.status(400).send();
+});
 
 app.listen(port, () => {
   console.log(`Started up at port ${port}`);
